@@ -1,0 +1,9 @@
+<div style={inputContainerStyle}>
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          style={inputStyle}
+        />
+        <button onClick={sendMessage(userId, receiverId)} style={buttonStyle}>Send</button> 
+      </div>
