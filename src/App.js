@@ -16,6 +16,7 @@ function App() {
   const messagesRef = useRef(null)
   const [image, setImage] = useState(null)
   const [documents, setDocuments] = useState(null)
+  const [videos, setVideos] = useState(null)
   useEffect(() => {
     
     
@@ -30,7 +31,6 @@ function App() {
   }
 
   const imageSender = {
-    width: '100px',
     height: '100px',
     transform: 'translateX(100%)',
     maxWidth: '50%',
@@ -384,6 +384,85 @@ function App() {
     })
   }
 
+
+
+  const uploadChatVideo = (e) => {
+    if (e.target.files[0]){
+      setVideos(e.target.files[0])
+    }
+  }
+
+  const handleUploadChatVideo = (e) => {
+    e?.preventDefault()
+    const formData = new FormData()
+    formData.append('video', videos)
+    const requestOptions = {
+      'method': 'POST',
+      body: formData
+    }
+    fetch('http://localhost:8000/'+'videos', requestOptions)
+    .then(response => {
+      if(response.ok){
+        return response.json()
+      }
+      throw response
+    })
+    .then(data => {
+      uploadVideos(data.filename)
+    })
+    .catch(error => {
+      console.log(error)
+    })
+    .finally(() => {
+        setDocuments(null)
+        document.getElementById('fileVideo').value = null
+    })
+  }
+
+  const uploadVideos = (videoUrl) =>{
+    const json_string = JSON.stringify({
+      'video_name': videoUrl,
+      'sender_id': userId,
+      'receiver_id': receiverId,
+      'room_id': roomNumber
+    })
+    const requestOptions = {
+      method: 'POST',
+      headers: new Headers({
+        'Content-Type': 'application/json'
+      }),
+      body: json_string
+    }
+    fetch('http://localhost:8000'+'/chat_video', requestOptions)
+    .then(response => {
+      if(response.ok){
+        return response.json()
+      }
+      throw response
+    })
+    .then(data => {
+      console.log(data)
+      if(videoUrl !== ''){
+        socket.send(JSON.stringify({'message':data.video_name, 'sender_id': userId, 'receiver_id': receiverId}))
+        socket.onmessage = (e) => {
+          var messages = document.getElementById('messages')
+          var document_ = document.createElement('a')
+          var new_mess = JSON.parse(JSON.parse(e.data))
+          console.log(new_mess)
+          if(new_mess.sender_id == userId){
+            document_.setAttribute("href", 'http://localhost:8000/'+videoUrl)  
+          }
+          else{
+            document_.setAttribute("href", 'http://localhost:8000/'+videoUrl) 
+          }
+          var content = document.createTextNode(new_mess.message)
+          document_.appendChild(content)
+          messages.appendChild(document_)
+      }
+    }
+    })
+  }
+
 const checkImageExist = function(imageURL){
   fetch('http://localhost:8000/'+'check_exist_image/'+imageURL)
   .then(response => {
@@ -501,7 +580,7 @@ const checkImageExist = function(imageURL){
         <button
         className="upload-chat-image"
         onClick={handleUploadChatImage}
-        >Upload Image</button>
+        >UI</button>
 <input 
         type="file"
         id='fileDocument'
@@ -509,8 +588,19 @@ const checkImageExist = function(imageURL){
         <button
         className="upload-chat-image"
         onClick={handleUploadChatDocument}
-        >Upload Document</button>
+        >UD</button>
+
+<input 
+        type="file"
+        id='fileVideo'
+        onChange={uploadChatVideo}/>
+        <button
+        className="upload-chat-image"
+        onClick={handleUploadChatVideo}
+        >UV</button>
       </div>
+
+      
       
     </div>
     </div>
