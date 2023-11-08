@@ -17,6 +17,7 @@ function App() {
   const [image, setImage] = useState(null)
   const [documents, setDocuments] = useState(null)
   const [videos, setVideos] = useState(null)
+  const [imageE, setImageE] = useState(false)
   useEffect(() => {
     
     
@@ -463,17 +464,17 @@ function App() {
     })
   }
 
-const checkImageExist = function(imageURL){
-  fetch('http://localhost:8000/'+'check_exist_image/'+imageURL)
+const checkImageExists = function(imageURL){
+   fetch('http://localhost:8000/check_exist_image/'+imageURL)
   .then(response => {
     if(response.ok){
       return response.json()
     }
-    throw response
+    // throw response
   })
   .then(data => {
-    console.log("Check images exists" + 1*data.message)
-    return 1*data.message
+    console.log("Check images exists "  + data.message)
+    setImageE(data.message)
     //console.log(data.message)
     //setImageExists(data.message)
   })
@@ -521,11 +522,19 @@ const checkImageExist = function(imageURL){
     <div style={chatContainerStyle}>
       <div style={messageContainerStyle} ref={messagesRef}>
         {messages.map((msg, idx) => {
+          console.log('MSG: ', msg);
           if(msg.sender_id === userId){
-            if((checkImageExist(msg.content.split('/')[1])===1)){
+             //console.log('FROm IF: ', checkImageExist(msg.content.split('/')));
+            // console.log('FROM IF: ', msg.content.split('/')[1]);
+            //console.log('URL: ', 'http://localhost:8000/'+msg.content);
+            checkImageExists(msg.content.split('/')[1])
+            if(imageE=="E"){
+              console.log('USPJESNO');
             return(
               <div style={imageSender}>   
               <a href={'http://localhost:8000/'+msg.content}> <img alt='' style={imageStyle} key={idx} src={'http://localhost:8000/'+msg.content}/></a>
+              
+              setImageE(false)
               </div>
               
             )
@@ -537,11 +546,19 @@ const checkImageExist = function(imageURL){
             }
             else{
             return(
+              <>
+              {
+            // console.log('FROm IF 22222: ', checkImageExist(msg.content.split('/')[1]))
+            console.log('NEUSPJESNO')
+
+              }
             <div style={sender} key={idx}>{msg.content}</div>
+              </>
+           
             )
             }
           }else{
-            if((checkImageExist(msg.content.split('/')[1])===1)){
+            if(true){
               return(
                 <div style={imageReceiver}>
                 <img style={imageStyle} key={idx} src={'http://localhost:8000/'+msg.content}/>
