@@ -17,10 +17,8 @@ function App() {
   const [image, setImage] = useState(null)
   const [documents, setDocuments] = useState(null)
   const [videos, setVideos] = useState(null)
-  const [imageE, setImageE] = useState(false)
   useEffect(() => {
-    
-    
+    messagesRef.current.scrollTop = messagesRef.current.scrollHeight
   }, []);
 
   const imageStyle = {
@@ -63,7 +61,13 @@ function App() {
     margin: '5px 0px',
     borderRadius: '5px',
     height: 'auto',
-    wordWrap: 'break-word'
+    wordWrap: 'break-word',
+    textDecoration: 'none'
+  }
+
+  const documentStyle = {
+    textDecoration: 'none',
+    color: '#ff0000'
   }
 
   const sender = {
@@ -78,7 +82,8 @@ function App() {
     margin: '5px 0px',
     borderRadius: '5px',
     transform: 'translateX(100%)',
-    wordWrap: 'break-word'
+    wordWrap: 'break-word',
+    textDecoration: 'none'
   }
 
   const chatContainerStyle = {
@@ -166,18 +171,18 @@ function App() {
   const sendMessage = (sender, receiver)=> () => {
       var input = document.getElementById('messageText')
       if(input.value.trim !== ''){
-        socket.send(JSON.stringify({'message':input.value, 'sender_id': sender, 'receiver_id': receiver}))
+        socket.send(JSON.stringify({'message':input.value, 'sender_id': sender, 'receiver_id': receiver, 'type_of_message': 'text'}))
         input.value = ''
         socket.onmessage = (e) => {
           var messages = document.getElementById('messages')
           var message = document.createElement('div')
           var new_mess = JSON.parse(JSON.parse(e.data))
-          console.log(new_mess)
           if(new_mess.sender_id === userId){
-            message.setAttribute("style", "text-align: right; color: green; border: 1px solid #caa; margin: 2px; background-color: #9ef781")  
+            message.setAttribute("style", "transform: translateX(100%); text-align: right; color: green;border: 1px solid #caa;background-color: #9ef781;max-width: 50%;width: auto;padding: 2px;box-sizing: border-box;margin: 5px 0px;border-radius: 5px;height: auto;word-wrap: break-word;")  
+      
           }
           else{
-            message.setAttribute("style", "text-align: left; color: red; border: 1px solid #caa; margin: 2px; background-color: #f57358") 
+            message.setAttribute("style", "text-align: left;color: red;border: 1px solid #caa;background-color: #f57358;max-width: 50%;width: auto;padding: 2px;box-sizing: border-box;margin: 5px 0px;border-radius: 5px;height: auto;word-wrap: break-word;") 
           }
           var content = document.createTextNode(new_mess.message)
           message.appendChild(content)
@@ -286,23 +291,32 @@ function App() {
       throw response
     })
     .then(data => {
-      console.log(data)
+      console.log("DATA", data)
       if(imageURL !== ''){
-        socket.send(JSON.stringify({'message':data.image_name, 'sender_id': userId, 'receiver_id': receiverId}))
+        socket.send(JSON.stringify({'message':data.image_name, 'sender_id': userId, 'receiver_id': receiverId, 'type_of_message': 'image'}))
         socket.onmessage = (e) => {
+          console.log(JSON.parse(JSON.parse(e.data)).message.split('/')[1])
+          var iU = JSON.parse(JSON.parse(e.data)).message
           var messages = document.getElementById('messages')
           var image = document.createElement('img')
+          var new_div = document.createElement('div')
+          
           var new_mess = JSON.parse(JSON.parse(e.data))
-          console.log(new_mess)
           if(new_mess.sender_id == userId){
-            image.setAttribute("src", 'http://localhost:8000/'+imageURL)  
+            new_div.setAttribute("style", "height: 100px; transform: translateX(100%); max-width: 50%; width: auto; box-sizing: border-box; margin: 3px 0px; border-radius: 10px")
+            image.setAttribute("src", 'http://localhost:8000/'+iU)  
+            image.setAttribute("style", "width: 100%; height: 100%;  object-fit: contain; border-radius: 10px; border: 1px solid black")
+
           }
           else{
-            image.setAttribute("src", 'http://localhost:8000/'+imageURL) 
+            new_div.setAttribute("style", "height: 100px; max-width: 50%; width: auto; box-sizing: border-box; margin: 3px 0px; border-radius: 10px")
+            image.setAttribute("src", 'http://localhost:8000/'+iU) 
+            image.setAttribute("style", "width: 100%; height: 100%;  object-fit: contain; border-radius: 10px; border: 1px solid black")
           }
           var content = document.createTextNode(new_mess.message)
           image.appendChild(content)
-          messages.appendChild(image)
+          new_div.appendChild(image)
+          messages.appendChild(new_div)
       }
     }
     })
@@ -363,23 +377,28 @@ function App() {
       throw response
     })
     .then(data => {
-      console.log(data)
       if(documentUrl !== ''){
-        socket.send(JSON.stringify({'message':data.document_name, 'sender_id': userId, 'receiver_id': receiverId}))
+        socket.send(JSON.stringify({'message':data.document_name, 'sender_id': userId, 'receiver_id': receiverId, 'type_of_message': 'document'}))
         socket.onmessage = (e) => {
           var messages = document.getElementById('messages')
           var document_ = document.createElement('a')
+          var new_div = document.createElement('div')
           var new_mess = JSON.parse(JSON.parse(e.data))
           console.log(new_mess)
           if(new_mess.sender_id == userId){
-            document_.setAttribute("href", 'http://localhost:8000/'+documentUrl)  
+            new_div.setAttribute("style", "transform: translateX(100%); text-align: right; color: green; border: 1px solid #caa; background-color: #9ef781; max-width: 50%; width: auto; padding: 2px; box-sizing: border-box; margin: 5px 0px; border-radius: 5px; height: auto; word-wrap: break-word;")
+            document_.setAttribute("style", "text-decoration: none; color: #ff0000")
+            document_.setAttribute("href", 'http://localhost:8000/'+new_mess.message)  
           }
           else{
-            document_.setAttribute("href", 'http://localhost:8000/'+documentUrl) 
+            new_div.setAttribute("style", "text-align: left; color: red; border: 1px solid #caa; background-color: #f57358; max-width: 50%; width: auto; padding: 2px; box-sizing: border-box; margin: 5px 0px; border-radius: 5px; height: auto; word-wrap: break-word")
+            document_.setAttribute("style", "text-decoration: none; color: #ff0000")
+            document_.setAttribute("href", 'http://localhost:8000/'+new_mess.message) 
           }
-          var content = document.createTextNode(new_mess.message)
+          var content = document.createTextNode(new_mess.message.split('/')[1])
           document_.appendChild(content)
-          messages.appendChild(document_)
+          new_div.appendChild(document_)
+          messages.appendChild(new_div)
       }
     }
     })
@@ -444,43 +463,32 @@ function App() {
     .then(data => {
       console.log(data)
       if(videoUrl !== ''){
-        socket.send(JSON.stringify({'message':data.video_name, 'sender_id': userId, 'receiver_id': receiverId}))
+        socket.send(JSON.stringify({'message':data.video_name, 'sender_id': userId, 'receiver_id': receiverId, 'type_of_message': 'video'}))
         socket.onmessage = (e) => {
           var messages = document.getElementById('messages')
-          var document_ = document.createElement('a')
           var new_mess = JSON.parse(JSON.parse(e.data))
+          var video = document.createElement('video')
+          var source = document.createElement('source')
           console.log(new_mess)
           if(new_mess.sender_id == userId){
-            document_.setAttribute("href", 'http://localhost:8000/'+videoUrl)  
+            video.setAttribute('controls', 'controls')
+            video.setAttribute('style', 'width: 200px; height: 200px')
+            source.setAttribute('src', 'http://localhost:8000/'+new_mess.message)
           }
           else{
-            document_.setAttribute("href", 'http://localhost:8000/'+videoUrl) 
+            video.setAttribute('controls', 'controls')
+            video.setAttribute('style', 'width: 200px; height: 200px')
+            source.setAttribute('src', 'http://localhost:8000/'+new_mess.message)
           }
           var content = document.createTextNode(new_mess.message)
-          document_.appendChild(content)
-          messages.appendChild(document_)
+          source.append(content)
+          video.appendChild(source)
+          messages.appendChild(video)
       }
     }
     })
   }
 
-const checkImageExists = function(imageURL){
-   fetch('http://localhost:8000/check_exist_image/'+imageURL)
-  .then(response => {
-    if(response.ok){
-      return response.json()
-    }
-    // throw response
-  })
-  .then(data => {
-    console.log("Check images exists "  + data.message)
-    setImageE(data.message)
-    //console.log(data.message)
-    //setImageExists(data.message)
-  })
-  //console.log('image_exists '+ imageExists)
-  //return imageExists
-}
 
   return (
     <div className="app">
@@ -522,52 +530,54 @@ const checkImageExists = function(imageURL){
     <div style={chatContainerStyle}>
       <div style={messageContainerStyle} ref={messagesRef}>
         {messages.map((msg, idx) => {
-          console.log('MSG: ', msg);
           if(msg.sender_id === userId){
-             //console.log('FROm IF: ', checkImageExist(msg.content.split('/')));
-            // console.log('FROM IF: ', msg.content.split('/')[1]);
-            //console.log('URL: ', 'http://localhost:8000/'+msg.content);
-            checkImageExists(msg.content.split('/')[1])
-            if(imageE=="E"){
-              console.log('USPJESNO');
+            if(msg.type_of_message==='image'){
             return(
               <div style={imageSender}>   
               <a href={'http://localhost:8000/'+msg.content}> <img alt='' style={imageStyle} key={idx} src={'http://localhost:8000/'+msg.content}/></a>
-              
-              setImageE(false)
               </div>
               
             )
             }
-            else if(msg.content.split('/')[0]==='documents' && (msg.content.split('.')[1]==='pdf' || msg.content.split('.')[1]==='doc' || msg.content.split('.')[1]==='docx')){
+            else if(msg.type_of_message==='document'){
               return(
-                <a href={'http://localhost:8000/'+msg.content}>{msg.content.split('/')[1]}</a>
+                <div style={sender}>
+                <a style={documentStyle} href={'http://localhost:8000/'+msg.content}>{msg.content.split('/')[1]}</a>
+                </div>
+              )
+            }
+            else if(msg.type_of_message==='video'){
+              return(
+                <video width="320" height="240" controls>
+                <source src={'http://localhost:8000/'+msg.content} type="video/mp4"/>
+                </video> 
               )
             }
             else{
             return(
-              <>
-              {
-            // console.log('FROm IF 22222: ', checkImageExist(msg.content.split('/')[1]))
-            console.log('NEUSPJESNO')
-
-              }
             <div style={sender} key={idx}>{msg.content}</div>
-              </>
-           
             )
             }
           }else{
-            if(true){
+            if(msg.type_of_message==='image'){
               return(
                 <div style={imageReceiver}>
                 <img style={imageStyle} key={idx} src={'http://localhost:8000/'+msg.content}/>
                 </div>
               )
               }
-              else if(msg.content.split('/')[0]==='documents' && (msg.content.split('.')[1]==='pdf' || msg.content.split('.')[1]==='doc' || msg.content.split('.')[1]==='docx')){
+              else if(msg.type_of_message==='document'){
                 return (
-                  <a href={'http://localhost:8000/'+msg.content} >{msg.content.split('/')[1]}</a>
+                  <div style={receiver}>
+                  <a style={documentStyle}  href={'http://localhost:8000/'+msg.content} >{msg.content.split('/')[1]}</a>
+                  </div>
+                )
+              }
+              else if(msg.type_of_message==='video'){
+                return(
+                  <video width="320" height="240" controls>
+                  <source src={'http://localhost:8000/'+msg.content} type="video/mp4"/>
+                  </video> 
                 )
               }
               else{
